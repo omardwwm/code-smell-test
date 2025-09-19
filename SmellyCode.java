@@ -1,155 +1,112 @@
-// God Class
-public class OrderProcessor {
-    private List<Product> products;
-    private Customer customer;
-    private double totalAmount;
+import java.util.*;
 
-    public OrderProcessor(Customer customer, List<Product> products) {
-        this.customer = customer;
-        this.products = products;
-        this.totalAmount = 0;
+public class ApplicationManager {
+    private List<User> users;
+    private List<Application> applications;
+
+    public ApplicationManager() {
+        users = new ArrayList<>();
+        applications = new ArrayList<>();
     }
 
-    // Long Method
-    public void processOrder(String paymentMethod, String shippingAddress, boolean applyDiscount) {
-        // Step 1: Calculate total amount
-        for (Product product : products) {
-            this.totalAmount += product.getPrice() * product.getQuantity();
+    // Long Method + God Class + Feature Envy + Switch Statement
+    public void handleApplication(String username, String appType, String action) {
+        User user = findUser(username);
+        if (user == null) {
+            System.out.println("User not found.");
+            return;
         }
 
-        // Step 2: Apply discount (Feature Envy)
-        if (applyDiscount && customer.isPremium()) {
-            // This logic should be in the Customer class, but it's "envious" of Customer's data
-            double discountRate = customer.getDiscountRate();
-            this.totalAmount *= (1 - discountRate);
+        Application app = new Application(appType);
+        applications.add(app);
+
+        // Feature Envy: accessing user data directly
+        if (user.getRole().equals("Admin")) {
+            app.setPriority(1);
+        } else {
+            app.setPriority(5);
         }
 
-        // Step 3: Handle payment (Switch Statement)
-        // This is a common place for a switch statement smell.
-        double transactionFee = 0;
-        switch (paymentMethod) {
-            case "CreditCard":
-                transactionFee = this.totalAmount * 0.02;
-                // Payment gateway integration logic...
-                System.out.println("Processing credit card payment...");
+        // Switch Statement
+        switch (action) {
+            case "submit":
+                System.out.println("Submitting application for " + user.getName());
                 break;
-            case "PayPal":
-                transactionFee = this.totalAmount * 0.015;
-                // PayPal API integration logic...
-                System.out.println("Processing PayPal payment...");
+            case "approve":
+                System.out.println("Approving application for " + user.getName());
                 break;
-            case "BankTransfer":
-                transactionFee = 5.0; // Flat fee
-                // Bank transfer logic...
-                System.out.println("Processing bank transfer...");
+            case "reject":
+                System.out.println("Rejecting application for " + user.getName());
                 break;
             default:
-                throw new IllegalArgumentException("Invalid payment method.");
-        }
-        this.totalAmount += transactionFee;
-
-        // Step 4: Update stock
-        for (Product product : products) {
-            product.updateStock();
+                System.out.println("Unknown action.");
         }
 
-        // Step 5: Generate shipping label
-        String shippingLabel = "Ship to: " + shippingAddress + " for order #" + customer.getCustomerId();
-        System.out.println("Generating shipping label: " + shippingLabel);
+        // Duplicate Code
+        System.out.println("Application handled for user: " + user.getName());
+        System.out.println("Application type: " + app.getType());
+        System.out.println("Priority: " + app.getPriority());
+    }
 
-        // Step 6: Send confirmation email
-        System.out.println("Sending confirmation email to " + customer.getEmail() + " for a total of " + this.totalAmount);
+    private User findUser(String username) {
+        for (User user : users) {
+            if (user.getUsername().equals(username)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    // Speculative Generality: unused method
+    public void futureFeature() {
+        // Placeholder for future logic
     }
 }
 
 // Data Class
-// This class holds data but lacks behavior.
-// It's just a container for data.
-class Product {
+class User {
+    private String username;
     private String name;
-    private double price;
-    private int quantity;
-    private String sku;
+    private String role;
 
-    public Product(String name, double price, int quantity, String sku) {
+    public User(String username, String name, String role) {
+        this.username = username;
         this.name = name;
-        this.price = price;
-        this.quantity = quantity;
-        this.sku = sku;
+        this.role = role;
     }
 
-    // Getters and setters...
+    public String getUsername() {
+        return username;
+    }
+
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public String getSku() {
-        return sku;
-    }
-
-    public void setSku(String sku) {
-        this.sku = sku;
-    }
-
-    // Method to illustrate the data class issue, but it's minimal behavior
-    public void updateStock() {
-        this.quantity--;
+    public String getRole() {
+        return role;
     }
 }
 
-// Another Data Class, used by the God Class
-class Customer {
-    private int customerId;
-    private String name;
-    private String email;
-    private boolean isPremium;
+// Another Data Class
+class Application {
+    private String type;
+    private int priority;
 
-    public Customer(int customerId, String name, String email, boolean isPremium) {
-        this.customerId = customerId;
-        this.name = name;
-        this.email = email;
-        this.isPremium = isPremium;
+    public Application(String type) {
+        this.type = type;
+        this.priority = 0;
     }
 
-    // Getters
-    public int getCustomerId() {
-        return customerId;
+    public String getType() {
+        return type;
     }
 
-    public String getName() {
-        return name;
+    public int getPriority() {
+        return priority;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public boolean isPremium() {
-        return isPremium;
-    }
-
-    // This method is envied by the OrderProcessor
-    public double getDiscountRate() {
-        return 0.1; // 10% for premium customers
+    public void setPriority(int priority) {
+        this.priority = priority;
     }
 }
